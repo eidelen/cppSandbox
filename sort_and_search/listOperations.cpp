@@ -2,11 +2,11 @@
 #include <functional>
 
 
-void cmpFunction( const vector<int>& v1, const vector<int>& v2, const uint& start, const uint& end, bool* result )
+void cmpFunction(const vector<int> &v1, const vector<int> &v2, const size_t &start, const size_t &end, bool *result)
 {
     bool ret = true;
 
-    for( int i = start; i < end; i++ )
+    for( size_t i = start; i < end; i++ )
     {
         if( v1[i] != v2[i] )
         {
@@ -49,7 +49,7 @@ bool ListOperations::CompareLists_MT( const vector<int>& v1, const vector<int>& 
 
     // compile results
     bool ret = true;
-    for( int tr = 0; tr < cmpThreads.size(); tr++ )
+    for( size_t tr = 0; tr < cmpThreads.size(); tr++ )
     {
         cmpThreads.at(tr).join();
         ret = ret && results[tr];

@@ -22,7 +22,7 @@ public:
     template<typename T> static string ArrToStr( const T* arr, const uint32_t& length );
     template<typename Iter> static string VecToStr(Iter begin, Iter end );
     template<typename T> static T* CreateArrOfRandomNumbers( const int& min, const int& max, const uint32_t& length );
-    template<typename T> static vector<T> CreateVectorOfRandomNumbers( const int& min, const int& max, const uint32_t& length );
+    template<typename T> static vector<T> CreateVectorOfRandomNumbers( const int& min, const int& max, const size_t& length );
 
     // Sort Algorithms
     template<typename Iter> static void BubbleSort( Iter begin, Iter end );
@@ -87,7 +87,7 @@ template<typename T> T* ListOperations::CreateArrOfRandomNumbers( const int& min
     return arr;
 }
 
-template<typename T> vector<T> ListOperations::CreateVectorOfRandomNumbers( const int& min, const int& max, const uint32_t& length )
+template<typename T> vector<T> ListOperations::CreateVectorOfRandomNumbers( const int& min, const int& max, const size_t & length )
 {
     vector<T> vec;
     for( uint32_t i = 0; i < length; i++ )
@@ -216,7 +216,7 @@ template<typename Iter> bool ListOperations::CompareLists_MT(Iter b1, Iter e1, I
 
     // compile results
     bool ret = true;
-    for( int tr = 0; tr < cmpThreads.size(); tr++ )
+    for( size_t tr = 0; tr < cmpThreads.size(); tr++ )
     {
         cmpThreads.at(tr).join();
         ret = ret && results[tr];

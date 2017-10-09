@@ -110,7 +110,7 @@ template<typename key, typename obj> TreeNode<key,obj>* insertNode( const key& a
 template<typename key, typename obj> TreeNode<key,obj>* createUnbalancedBinaryTree( vector<key> keys, vector<obj> objs )
 {
     TreeNode<key,obj>* tree = NULL;
-    for( int i = 0; i < keys.size(); i++ )
+    for( size_t i = 0; i < keys.size(); i++ )
     {
         tree = insertNode<key,obj>(keys.at(i), objs.at(i), tree);
     }
