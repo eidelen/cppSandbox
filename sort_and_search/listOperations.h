@@ -32,6 +32,7 @@ public:
     template<typename Iter> static bool CompareLists( Iter b1, Iter e1, Iter b2 );
     template<typename Iter> static bool CompareLists_MT( Iter b1, Iter e1, Iter b2, const int& nbrOfThreads = 1 );
     static bool CompareLists_MT( const vector<int>& v1, const vector<int>& v2, const int& nbrOfThreads = 1 );
+    static bool CompareVectors_SSE( const vector<int>& a, const vector<int>& b);
 
     // Search
     template<typename Iter, typename key> static Iter Search( Iter begin, Iter end, key aKey);

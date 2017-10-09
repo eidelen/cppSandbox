@@ -13,7 +13,6 @@ using namespace std;
 
 int main (int argc, char *argv[])
 {
-
     //****** sort lists *************//
 
     size_t nbrOfElementsToSort = 1000000;
@@ -68,6 +67,11 @@ int main (int argc, char *argv[])
     cmp = ListOperations::CompareLists_MT( cmpVec, cmpVec, 4 );
     finish = clock();
     cout << "Own multi-thread vector compare (seconds): " << ((double)(finish - start))/CLOCKS_PER_SEC << "  Res: " << cmp << endl;
+
+    start = clock();
+    cmp = ListOperations::CompareVectors_SSE( cmpVec, cmpVec);
+    finish = clock();
+    cout << "Own SSE vector compare (seconds): " << ((double)(finish - start))/CLOCKS_PER_SEC << "  Res: " << cmp << endl;
 
     start = clock();
     cmp = equal( cmpVec.begin(), cmpVec.end() , cmpVec.begin() );
