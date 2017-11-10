@@ -3,6 +3,7 @@
 #define MY_MATRIX_H
 
 #include <memory>
+#include <iostream>
 
 template <class T>
 class Matrix
@@ -37,7 +38,6 @@ public:
      */
     T getValue( size_t m, size_t n ) const;
 
-
     /**
      * Gets the value at position m, n.
      * @param m
@@ -46,6 +46,13 @@ public:
      */
     const T operator() (size_t m, size_t n) const;
     T& operator() (size_t m, size_t n);
+
+    /**
+     * Creates a m x m identity matrix
+     * @param m Matrix size.
+     * @return Identity matrix.
+     */
+    static Matrix<T> eye(size_t m);
 
 protected:
     const size_t m_rows;
@@ -97,28 +104,58 @@ void Matrix<T>::setValue( T val )
 template <class T>
 void Matrix<T>::setValue( size_t m, size_t n, T val)
 {
-    m_data[m*n + n] = val;
+    m_data[m*cols() + n] = val;
 }
 
 template <class T>
 T Matrix<T>::getValue( size_t m, size_t n ) const
 {
-    return m_data[m*n + n];
+    return m_data[m*cols() + n];
 }
 
 template <class T>
 const T Matrix<T>::operator() (size_t m, size_t n) const
 {
-    return m_data[m*n + n];
+    return m_data[m*cols() + n];
 }
 
 template <class T>
 T& Matrix<T>::operator() (size_t m, size_t n)
 {
-    return m_data[m*n + n];
+    return m_data[m*cols() + n];
+}
+
+template <class T>
+Matrix<T> Matrix<T>::eye(size_t m)
+{
+    Matrix<T> ident = Matrix<T>(m,m);
+    ident.setValue(0);
+    for(size_t i = 0; i < m; i++)
+    {
+        ident(i,i) = 1;
+    }
+
+    return ident;
 }
 
 
+
+
+template <class T>
+std::ostream& operator<<(std::ostream& os, Matrix<T> const& mat)
+{
+    for( size_t m = 0; m < mat.rows(); m++ )
+    {
+        for( size_t n = 0; n < mat.cols(); n++ )
+        {
+            os << mat(m,n);
+            if( n+1 < mat.cols() )
+                os << ", ";
+        }
+
+        os << std::endl;
+    }
+}
 
 // Predefined Matrix Types
 typedef std::shared_ptr<Matrix<int>> MatrixISP;

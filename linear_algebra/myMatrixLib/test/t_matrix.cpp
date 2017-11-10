@@ -46,3 +46,18 @@ TEST(Matrix, SetElementsToSameValue)
         for( size_t n = 0; n < nCols; n++ )
             ASSERT_EQ(mat->getValue(m, n), val);
 }
+
+TEST(Matrix, IdentityMatrix)
+{
+    size_t s = 5;
+    Matrix<int> eyeM = Matrix<int>::eye(s);
+
+    std::cout << eyeM << std::endl;
+
+    for(size_t m = 0; m < s; m++)
+        for(size_t n = 0; n < s; n++)
+            if( n == m )
+                ASSERT_EQ(eyeM(m,n), 1);
+            else
+                ASSERT_EQ(eyeM(m,n), 0);
+}
