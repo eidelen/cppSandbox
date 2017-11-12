@@ -62,7 +62,7 @@ public:
      * @param scale Scalar
      * @return Matrix
      */
-    Matrix<T> operator* (const int& scale) const;
+    Matrix<T> operator* (T scale) const;
 
     /**
      * Elementwise addition of two matrix.
@@ -197,9 +197,21 @@ bool Matrix<T>::equalDimension( const Matrix<T> m1, const Matrix<T> m2)
 }
 
 template <class T>
-Matrix<T> Matrix<T>::operator* (const int& scale) const
+Matrix<T> Matrix<T>::operator* (T scale) const
 {
+    Matrix<T> res(this->rows(), this->cols());
+    T* resD = res.data();
+    const T* dataD = this->data();
+    for(size_t i = 0; i < this->getNbrOfElements(); i++)
+        resD[i] = dataD[i] * scale;
 
+    return res;
+}
+
+template <class T>
+Matrix<T> operator*(T scale, const Matrix<T>& mat)
+{
+    return mat * scale;
 }
 
 template <class T>
