@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <iostream>
+#include <cmath>
 
 template <class T>
 class Matrix
@@ -15,6 +16,8 @@ public:
     size_t rows() const;
     size_t cols() const;
     size_t getNbrOfElements() const;
+    inline T*     data();
+    inline const T* data() const;
 
     /**
      * Sets each element to the value val.
@@ -39,6 +42,13 @@ public:
     T getValue( size_t m, size_t n ) const;
 
     /**
+     * Elementwise comparisson with the passed matrix mat.
+     * @param epsilon The allowed tolerance.
+     * @return True if all elements are within the tolerance. Otherwise false.
+     */
+    bool compare( const Matrix<T>& mat, double epsilon = 0.0 ) const;
+
+    /**
      * Gets the value at position m, n.
      * @param m
      * @param n
@@ -55,6 +65,20 @@ public:
     Matrix<T> operator* (const int& scale) const;
 
     /**
+     * Elementwise addition of two matrix.
+     * @param mat
+     * @return Resulting matrix.
+     */
+    Matrix<T> operator+ (const Matrix<T>& mat) const;
+
+    /**
+     * Elementwise subtraction of two matrix.
+     * @param mat
+     * @return Resulting matrix.
+     */
+    Matrix<T> operator- (const Matrix<T>& mat) const;
+
+    /**
      * Creates a m x m identity matrix
      * @param m Matrix size.
      * @return Identity matrix.
@@ -62,10 +86,19 @@ public:
     static Matrix<T> eye(size_t m);
 
 protected:
+    /**
+     * Check if the dimensions of the two passed matrix are equal.
+     * @param m1 Mat 1
+     * @param m2 Mat 2
+     * @return True if equal dimension.
+     */
+    static bool equalDimension( const Matrix<T> m1, const Matrix<T> m2);
+
+protected:
     const size_t m_rows;
     const size_t m_cols;
 
-    T* m_data;
+    std::shared_ptr<T> m_data;
     const size_t m_nbrOfElements;
 };
 
@@ -74,19 +107,30 @@ template <class T>
 Matrix<T>::Matrix(size_t rows, size_t cols)
         : m_rows(rows), m_cols(cols), m_nbrOfElements(rows*cols)
 {
-    m_data = new T[ m_nbrOfElements ];
+    m_data.reset( new T[m_nbrOfElements] );
 }
 
 template <class T>
 Matrix<T>::~Matrix()
 {
-    delete[] m_data;
 }
 
 template <class T>
 size_t Matrix<T>::rows() const
 {
     return m_rows;
+}
+
+template <class T>
+inline T* Matrix<T>::data()
+{
+    return m_data.get();
+}
+
+template <class T>
+inline const T* Matrix<T>::data() const
+{
+    return m_data.get();
 }
 
 template <class T>
@@ -104,32 +148,33 @@ size_t Matrix<T>::getNbrOfElements() const
 template <class T>
 void Matrix<T>::setValue( T val )
 {
+    T* dataPtr = data();
     for( size_t i = 0; i < m_nbrOfElements; i++ )
-        m_data[i] = val;
+        dataPtr[i] = val;
 }
 
 template <class T>
 void Matrix<T>::setValue( size_t m, size_t n, T val)
 {
-    m_data[m*cols() + n] = val;
+    data()[m*cols() + n] = val;
 }
 
 template <class T>
 T Matrix<T>::getValue( size_t m, size_t n ) const
 {
-    return m_data[m*cols() + n];
+    return data()[m*cols() + n];
 }
 
 template <class T>
 const T Matrix<T>::operator() (size_t m, size_t n) const
 {
-    return m_data[m*cols() + n];
+    return data()[m*cols() + n];
 }
 
 template <class T>
 T& Matrix<T>::operator() (size_t m, size_t n)
 {
-    return m_data[m*cols() + n];
+    return data()[m*cols() + n];
 }
 
 template <class T>
@@ -146,9 +191,51 @@ Matrix<T> Matrix<T>::eye(size_t m)
 }
 
 template <class T>
+bool Matrix<T>::equalDimension( const Matrix<T> m1, const Matrix<T> m2)
+{
+    return m1.cols()==m2.cols() && m1.rows()==m2.rows();
+}
+
+template <class T>
 Matrix<T> Matrix<T>::operator* (const int& scale) const
 {
 
+}
+
+template <class T>
+Matrix<T> Matrix<T>::operator+ (const Matrix<T>& mat) const
+{
+    // check dimension
+    if(!equalDimension(*this, mat))
+    {
+        std::cout << "mismatching matrix size";
+        std::exit(-1);
+    }
+
+    Matrix<T> res = Matrix<T>(rows(),cols());
+    T* resD = res.data(); const T* thisData = data(); const T* matD = mat.data();
+    for(size_t i = 0; i < getNbrOfElements(); i++)
+        resD[i] = thisData[i] + matD[i];
+
+    return res;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::operator- (const Matrix<T>& mat) const
+{
+    // check dimension
+    if(!equalDimension(*this, mat))
+    {
+        std::cout << "mismatching matrix size";
+        std::exit(-1);
+    }
+
+    Matrix<T> res = Matrix<T>(rows(),cols());
+    T* resD = res.data(); const T* thisData = data(); const T* matD = mat.data();
+    for(size_t i = 0; i < getNbrOfElements(); i++)
+        resD[i] = thisData[i] - matD[i];
+
+    return res;
 }
 
 
@@ -168,6 +255,27 @@ std::ostream& operator<<(std::ostream& os, Matrix<T> const& mat)
     }
 
     return os;
+}
+
+template <class T>
+bool Matrix<T>::compare(const Matrix<T>& mat, double epsilon) const
+{
+    if(!equalDimension(*this, mat))
+    {
+        std::cout << "mismatching matrix size";
+        std::exit(-1);
+    }
+
+    const T* thisData = data(); const T* matD = mat.data();
+    for(size_t i = 0; i < getNbrOfElements(); i++)
+    {
+        double diff = thisData[i] - matD[i];
+        if( std::fabs(diff) > epsilon )
+            return false;
+    }
+
+    return true;
+
 }
 
 // Predefined Matrix Types
