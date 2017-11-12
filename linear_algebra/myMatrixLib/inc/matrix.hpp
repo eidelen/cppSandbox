@@ -48,6 +48,13 @@ public:
     T& operator() (size_t m, size_t n);
 
     /**
+     * Multiplication of a matrix with a scalar.
+     * @param scale Scalar
+     * @return Matrix
+     */
+    Matrix<T> operator* (const int& scale) const;
+
+    /**
      * Creates a m x m identity matrix
      * @param m Matrix size.
      * @return Identity matrix.
@@ -138,7 +145,11 @@ Matrix<T> Matrix<T>::eye(size_t m)
     return ident;
 }
 
+template <class T>
+Matrix<T> Matrix<T>::operator* (const int& scale) const
+{
 
+}
 
 
 template <class T>
@@ -155,6 +166,8 @@ std::ostream& operator<<(std::ostream& os, Matrix<T> const& mat)
 
         os << std::endl;
     }
+
+    return os;
 }
 
 // Predefined Matrix Types
