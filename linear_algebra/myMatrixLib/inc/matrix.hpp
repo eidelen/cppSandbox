@@ -65,6 +65,13 @@ public:
     Matrix<T> operator* (T scale) const;
 
     /**
+     * Matrix multiplication
+     * @param mat
+     * @return Product of two matrix
+     */
+    Matrix<T> operator* (const Matrix<T>& mat) const;
+
+    /**
      * Elementwise addition of two matrix.
      * @param mat
      * @return Resulting matrix.
@@ -212,6 +219,33 @@ template <class T>
 Matrix<T> operator*(T scale, const Matrix<T>& mat)
 {
     return mat * scale;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat) const
+{
+    if( this->cols() != mat.rows() )
+    {
+        std::cout << "mismatching matrix size";
+        std::exit(-1);
+    }
+
+    Matrix<T> res(this->rows(), mat.cols());
+
+    for( size_t n = 0; n < mat.cols(); n++)
+    {
+        for( size_t m = 0; m < this->rows(); m++)
+        {
+            T accum = 0;
+            for(size_t a = 0; a < this->cols(); a++)
+            {
+                accum = accum + (this->getValue(m,a) * mat(a,m));
+            }
+            res(m,n) = accum;
+        }
+    }
+
+    return res;
 }
 
 template <class T>
