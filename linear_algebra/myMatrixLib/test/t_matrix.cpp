@@ -60,3 +60,27 @@ TEST(Matrix, Identity)
             else
                 ASSERT_EQ(eyeM(m,n), 0);
 }
+
+TEST(Matrix, Row)
+{
+    auto mat = Matrix<int>::eye(3);
+
+    auto r3 = mat.row(2); // r3 -> 0,0,1
+
+    auto s3 = Matrix<int>(1,3);
+    s3(0,0) = 0; s3(0,1) = 0; s3(0,2) = 1;
+
+    ASSERT_TRUE(s3.compare(r3));
+}
+
+TEST(Matrix, Column)
+{
+    auto mat = Matrix<int>::eye(3);
+
+    auto r3 = mat.column(2); // r3 -> 0;0;1
+
+    auto s3 = Matrix<int>(3,1);
+    s3(0,0) = 0; s3(1,0) = 0; s3(2,0) = 1;
+
+    ASSERT_TRUE(s3.compare(r3));
+}

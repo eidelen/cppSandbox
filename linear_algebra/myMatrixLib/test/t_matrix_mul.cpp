@@ -18,6 +18,7 @@ TEST(MatMul, Scalar)
     ASSERT_TRUE(res2.compare(soll1));
 }
 
+/*
 TEST(MatMul, MatrixMatrixSquare)
 {
     size_t s = 4;
@@ -41,7 +42,7 @@ TEST(MatMul, MatrixMatrixSquare)
     ASSERT_TRUE(res2.compare(soll2));
 
     std::cout << res2;
-}
+}*/
 
 
 

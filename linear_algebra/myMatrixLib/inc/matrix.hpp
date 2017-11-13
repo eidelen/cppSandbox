@@ -39,7 +39,21 @@ public:
      * @param n Column
      * @return Value
      */
-    T getValue( size_t m, size_t n ) const;
+    inline T getValue( size_t m, size_t n ) const;
+
+    /**
+     * Returns the row at position m
+     * @param m
+     * @return row-vector of size 1xn
+     */
+    Matrix<T> row(size_t m) const;
+
+    /**
+     * Returns the column at position n
+     * @param n
+     * @return column-vector of size mx1
+     */
+    Matrix<T> column(size_t n) const;
 
     /**
      * Elementwise comparisson with the passed matrix mat.
@@ -167,10 +181,44 @@ void Matrix<T>::setValue( size_t m, size_t n, T val)
 }
 
 template <class T>
-T Matrix<T>::getValue( size_t m, size_t n ) const
+inline T Matrix<T>::getValue( size_t m, size_t n ) const
 {
     return data()[m*cols() + n];
 }
+
+template <class T>
+Matrix<T> Matrix<T>::row(size_t m) const
+{
+    if( m >= rows() )
+    {
+        std::cout << "Row access not possible. " << m << ", max " << rows();
+        std::exit(-1);
+    }
+
+    Matrix<T> ret(1,cols());
+    size_t offset = m * cols();
+    for(size_t i = 0; i < cols(); i++)
+        ret.data()[i] = this->data()[offset+i];
+
+    return ret;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::column(size_t n) const
+{
+    if( n >= cols() )
+    {
+        std::cout << "Column access not possible. " << n << ", max " << cols();
+        std::exit(-1);
+    }
+
+    Matrix<T> ret(rows(),1);
+    for(size_t i = 0; i < rows(); i++)
+        ret(i,0) = this->getValue(i,n);
+
+    return ret;
+}
+
 
 template <class T>
 const T Matrix<T>::operator() (size_t m, size_t n) const
