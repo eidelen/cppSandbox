@@ -4,16 +4,17 @@
 #include <chrono>
 #include <iostream>
 #include <mutex>
+#include <future>
 
 using namespace std::chrono_literals;
 
 void producer( std::queue<int>& q, std::condition_variable& cond, std::mutex& mut)
 {
     // no data coming initially
-    std::this_thread::sleep_for(3s);
+    std::this_thread::sleep_for(1s);
 
     // then 5 messages at once
-    for( int n = 0; n < 5; n++ )
+    for( int n = 0; n < 3; n++ )
     {
        // std::unique_lock ul(mut);
         q.push(n);
@@ -57,6 +58,8 @@ void processor( std::queue<int>& q, std::condition_variable& cond, std::mutex& m
 
 int main()
 {
+    // condition variable
+
     std::condition_variable cond;
     std::mutex mut;
     std::queue<int> q;
@@ -83,4 +86,24 @@ int main()
     }
 
     proc.join();
+
+
+
+    // promise and future
+    std::promise<int> sumProm;
+    std::future<int> futProm = sumProm.get_future();
+
+    std::thread t( [&sumProm](){
+        std::cout << "SumTh: Do heavy computation" << std::endl;
+        std::this_thread::sleep_for(2000ms);
+        sumProm.set_value( 1234 );
+
+    });
+
+    std::this_thread::sleep_for(2ms);
+    std::cout << "MainTh: Wait for thread result... ";
+    std::cout << futProm.get() << std::endl;
+
+    t.join();
+
 }
