@@ -1,5 +1,6 @@
 #include "NaiveDotProduct.h"
 #include "HashDot.h"
+#include "HashDotThreading.h"
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -57,7 +58,8 @@ SparseVector getRandomVector(size_t maxLength, size_t nbrOfNonZeros)
 
 int main()
 {
-    std::vector<DotProdSP> methods = {DotProdSP(new HashDotProduct("Crazy Hash Tables"))}; //DotProdSP(new NaiveDotProduct("Simu's Naive Approach"))};
+    std::vector<DotProdSP> methods = {DotProdSP(new HashDotProduct("Crazy Hash Tables")),
+                                      DotProdSP(new HashDotThreading("Multi Threading Hash Tables"))}; //DotProdSP(new NaiveDotProduct("Simu's Naive Approach"))};
     for( auto algo: methods )
     {
         std::cout << "####### " << algo->getMethodName() << " #######" << std::endl;
