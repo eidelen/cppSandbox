@@ -1,4 +1,5 @@
 #include "NaiveDotProduct.h"
+#include "HashDot.h"
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -44,7 +45,8 @@ SparseVector getRandomVector(size_t maxLength, size_t nbrOfNonZeros)
 
 int main()
 {
-    std::vector<DotProdSP> methods = {DotProdSP(new NaiveDotProduct("Naive Approach"))};
+    std::vector<DotProdSP> methods = {DotProdSP(new HashDotProduct("Crazy Hash Tables")),
+                                      DotProdSP(new NaiveDotProduct("Simu's Naive Approach"))};
     for( auto algo: methods )
     {
         std::cout << "####### " << algo->getMethodName() << " #######" << std::endl;
@@ -64,7 +66,8 @@ int main()
                                                                             {5,   20000, 1000},
                                                                             {5,   20000, 10000},
                                                                             {2,   40000, 4000},
-                                                                            {2,   40000, 10000}};
+                                                                            {2,   40000, 10000},
+                                                                            {1,   80000, 20000}};
 
         for (auto[iterations, length, nonZeros]: performanceTests)
         {
