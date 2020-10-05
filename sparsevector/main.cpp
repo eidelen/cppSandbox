@@ -12,12 +12,24 @@
  */
 bool baseCheck(DotProdSP method)
 {
+    // simple
     SparseVector a = {{5, 1.0},  {7, -1.0}, {3, 2.0}, {2, 3.0}};
     SparseVector b = {{7, -1.0}, {5, 2.0},  {3, 7.0}, {1, 3.0}};
 
     // 1.0 * 2.0 + -1.0 * -1.0 + 2.0 * 7.0 = 17.0
     double res = method->compute(a, b);
-    return std::fabs(res - 17.0) < 1e-10;
+    bool ok = std::fabs(res - 17.0) < 1e-10;
+
+    // long
+    SparseVector c;
+    SparseVector d;
+    for(size_t i = 0; i < 1000; i++)
+    {
+        c.push_back({i, 1.0});
+        d.push_back({i, 2.0});
+    }
+    double res2 = method->compute(c, d);
+    return ok && std::fabs(res2 - 2000.0) < 1e-10;
 }
 
 /**
@@ -45,8 +57,7 @@ SparseVector getRandomVector(size_t maxLength, size_t nbrOfNonZeros)
 
 int main()
 {
-    std::vector<DotProdSP> methods = {DotProdSP(new HashDotProduct("Crazy Hash Tables")),
-                                      DotProdSP(new NaiveDotProduct("Simu's Naive Approach"))};
+    std::vector<DotProdSP> methods = {DotProdSP(new HashDotProduct("Crazy Hash Tables"))}; //DotProdSP(new NaiveDotProduct("Simu's Naive Approach"))};
     for( auto algo: methods )
     {
         std::cout << "####### " << algo->getMethodName() << " #######" << std::endl;
@@ -65,9 +76,10 @@ int main()
                                                                             {250, 1000,  700},
                                                                             {5,   20000, 1000},
                                                                             {5,   20000, 10000},
-                                                                            {2,   40000, 4000},
-                                                                            {2,   40000, 10000},
-                                                                            {1,   80000, 20000}};
+                                                                            {5,   40000, 4000},
+                                                                            {5,   40000, 10000},
+                                                                            {5,   80000, 20000},
+                                                                            {5,  250000, 100000}};
 
         for (auto[iterations, length, nonZeros]: performanceTests)
         {
