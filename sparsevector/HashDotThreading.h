@@ -8,12 +8,29 @@
 #include <numeric>
 #include <iostream>
 #include <functional>
+#include <future>
+
 
 class HashDotThreading: public DotProd
 {
 public:
     explicit HashDotThreading(const std::string &methodName) : DotProd(methodName)
     {}
+
+    static double computeSection(const SparseVector &a, size_t startIdx, size_t endIdx, const std::unordered_map<size_t, double>& bHash)
+    {
+        double partialDot = 0.0;
+        for (size_t q = startIdx; q < endIdx; q++)
+        {
+            auto[pos, val] = a[q];
+            auto corresponding = bHash.find(pos);
+            if (corresponding != bHash.end())
+            {
+                partialDot += val * corresponding->second;
+            }
+        }
+        return partialDot;
+    }
 
     double compute(const SparseVector &a, const SparseVector &b) override
     {
@@ -24,37 +41,24 @@ public:
             bHash[pos] = val;
         }
 
-        size_t nThreads = 20;
+        size_t nThreads = 2;
         size_t batchSize = a.size() / nThreads;
 
         std::vector<double> partialResults(nThreads, 0.0);
-        std::vector<std::thread> workers;
+        std::vector<std::future<double>> workers;
         const SparseVector& a_const = a;
+
         for(size_t tidx = 0; tidx < nThreads; tidx++)
         {
             size_t startIdx = tidx * batchSize;
             size_t endIdx = (tidx + 1 < nThreads) ? startIdx + batchSize: a.size();
-            workers.push_back(std::thread([startIdx, endIdx, &a_const, &bHash, &partialResults, tidx]() mutable{
-                double partialDot = 0.0;
-                for (size_t q = startIdx; q < endIdx; q++)
-                {
-                    auto[pos, val] = a_const[q];
-                    auto corresponding = bHash.find(pos);
-                    if (corresponding != bHash.end())
-                    {
-                        partialDot += val * corresponding->second;
-                    }
-                }
-                partialResults[tidx] = partialDot;
-              }));
+
+            workers.push_back(std::async(std::launch::async, &HashDotThreading::computeSection, std::cref(a_const), startIdx, endIdx, std::cref(bHash) ));
         }
 
-        std::for_each(workers.begin(), workers.end(), [](std::thread &t)
-        {
-            t.join();
+        return std::accumulate(workers.begin(), workers.end(), 0.0, [](double result, std::future<double>& f ){
+            return result + f.get();
         });
-
-        return std::accumulate(partialResults.begin(), partialResults.end(), 0.0);
     }
 };
 
