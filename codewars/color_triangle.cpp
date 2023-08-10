@@ -1,11 +1,34 @@
 #include <string>
 #include <iostream>
+#include <unordered_map>
+#include <bitset>
 
 #include <chrono>
 
 // product is order invariant
 constexpr char GB = 'G'*'B';
 constexpr char GR = 'G'*'R';
+
+constexpr char R = 0b01;
+constexpr char G = 0b10;
+constexpr char B = 0b11;
+
+char compress4in1(const char* data)
+{
+    char compressed = 0x00;
+    for(int i = 0; i < 4; i++)
+    {
+        char a = data[i];
+        char code = a=='R' ? R : ( a=='G' ? G : B);
+        compressed = compressed | (code << (6 - i*2));
+
+        std::bitset<8> y(compressed);
+        std::cout << y << std::endl;
+    }
+
+    return compressed;
+
+}
 
 char getMissing(char a, char b)
 {
@@ -40,15 +63,22 @@ void getMissingInplace(char* aAdr)
 
 char triangle(std::string row_str)
 {
-  for(size_t k = row_str.length(); k > 0; k--)
-    for(size_t i = 0; i < k-1; i++)
-      getMissingInplace(&row_str[i]); //getMissing(row_str[i], row_str[i+1]);
-  return row_str[0];
+    for(size_t k = row_str.length(); k > 0; k--)
+    {
+        for(size_t i = 0; i < k-1; i++)
+        {
+            getMissingInplace(&row_str[i]); //getMissing(row_str[i], row_str[i+1]);
+        }
+    }
+    return row_str[0];
 }
 
 
 int main (int argc, char *argv[])
 {
+    std::string q("RGRB");
+    compress4in1(&q[0]);
+
     char res = triangle("RBRGBRB");
     if(res == 'G')
         std::cout << "Fine" << std::endl;
