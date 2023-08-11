@@ -2,6 +2,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <bitset>
+#include <vector>
 
 #include <chrono>
 
@@ -9,9 +10,25 @@
 constexpr char GB = 'G'*'B';
 constexpr char GR = 'G'*'R';
 
-constexpr char R = 0b01;
-constexpr char G = 0b10;
-constexpr char B = 0b11;
+constexpr char P = 0b00; // padding
+constexpr char R = 0b01; // red
+constexpr char G = 0b10; // green
+constexpr char B = 0b11; // blue
+
+
+
+std::string decompress1in4(char data)
+{
+    std::string decompressed(4, ' ');
+    for(int i = 0; i < 4; i++)
+    {
+        char val = (data >> (6 - i*2)) & 0b11;
+        char col = val == R ? 'R' : ( val == G ? 'G' : ( val == B ? 'B' : '-') );
+        decompressed[i] = col;
+    }
+
+    return decompressed;
+}
 
 char compress4in1(const char* data)
 {
@@ -19,7 +36,7 @@ char compress4in1(const char* data)
     for(int i = 0; i < 4; i++)
     {
         char a = data[i];
-        char code = a=='R' ? R : ( a=='G' ? G : B);
+        char code = a=='R' ? R : ( a=='G' ? G : ( a=='B' ? B : P));
         compressed = compressed | (code << (6 - i*2));
 
         std::bitset<8> y(compressed);
@@ -27,8 +44,25 @@ char compress4in1(const char* data)
     }
 
     return compressed;
-
 }
+
+std::vector<char> compressLine(std::string line)
+{
+    // line length multiple of 4 -> padding
+    size_t paddingLength = line.length() % 4 == 0 ? 0 : 4 - (line.length() % 4);
+    line.append(paddingLength, '-');
+
+    std::vector<char> compLine(line.length() / 4); // compress 4 elements into 1 char
+    char* lineChr = &line[0];
+    for(size_t i = 0; i < compLine.size(); i++)
+    {
+        compLine[i] = compress4in1(lineChr);
+        lineChr = lineChr + 4;
+    }
+
+    return compLine;
+}
+
 
 char getMissing(char a, char b)
 {
@@ -77,7 +111,16 @@ char triangle(std::string row_str)
 int main (int argc, char *argv[])
 {
     std::string q("RGRB");
-    compress4in1(&q[0]);
+    char compTest = compress4in1(&q[0]);
+    std::string decompTest = decompress1in4(compTest);
+    std::cout << "Decomp: " << decompTest << std::endl;
+
+    q = "RRRRR"; // 2 x char (3 values padded)
+    std::vector<char> compLine = compressLine(q);
+    std::bitset<8> b0(compLine[0]);
+    std::bitset<8> b1(compLine[1]);
+    std::cout << q << ": compressed to n chars = " << compLine.size() << ", bytes=" << b0 << ", " << b1 << std::endl;
+
 
     char res = triangle("RBRGBRB");
     if(res == 'G')
