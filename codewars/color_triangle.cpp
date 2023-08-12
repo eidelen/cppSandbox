@@ -30,7 +30,7 @@ std::string decompress1in4(char data)
     return decompressed;
 }
 
-unsigned char compress4in1(const char* data)
+char compress4in1(const char* data)
 {
     char compressed = 0x00;
     for(int i = 0; i < 4; i++)
@@ -87,11 +87,6 @@ char getMissing(char a, char b)
 
 char triangleNaive(std::string row_str)
 {
-    // remove padding
-    //row_str.erase(std::remove(row_str.begin(), row_str.end(), '-'), row_str.end());
-    //if(row_str.length() == 0)
-    //    return '-';
-
     if(row_str.length() == 1)
         return row_str[0];
 
@@ -105,14 +100,29 @@ char triangleNaive(std::string row_str)
     return row_str[0];
 }
 
-std::vector<char> createLookup()
+std::unordered_map<std::string, char> createLookup()
 {
-    std::vector<char> table(255);
-    for(size_t code = 0; code < 255; code++)
+    std::unordered_map<std::string, char> table;
+    std::string config(4, '-');
+    for(char i: {'R','B', 'G', '-'})
     {
-        std::string config = decompress1in4((char)code);
-        char config_res = triangleNaive(config);
-        table[code] = config_res;
+        config[0] = i;
+        for(char j: {'R','B', 'G', '-'})
+        {
+            config[1] = j;
+            for(char m: {'R','B', 'G', '-'})
+            {
+                config[2] = m;
+                for(char n: {'R','B', 'G', '-'})
+                {
+                    config[3] = n;
+
+                    char solution = triangleNaive(config);
+                    std::cout << "Table: " << solution << ":" << config << std::endl;
+
+                }
+            }
+        }
     }
 
     return table;
@@ -123,31 +133,37 @@ char triangle(std::string row_str)
 
     std::chrono::steady_clock::time_point prepare = std::chrono::steady_clock::now();
 
-    std::vector<char> lt = createLookup();
-    std::vector<char> cLine = compressLine(row_str);
+    std::unordered_map<std::string, char> lt = createLookup();
+
+    // line padding
+    size_t paddingLength = row_str.length() % 4 == 0 ? 0 : 4 - (row_str.length() % 4);
+    row_str.append(paddingLength, '-');
+
+    std::string nextLine = row_str;
 
     std::chrono::steady_clock::time_point endPreapare = std::chrono::steady_clock::now();
     std::cout << "Preparation duration ms: " << std::chrono::duration_cast<std::chrono::milliseconds>(endPreapare - prepare).count() << std::endl;
 
-
     // process three lines at once
     for(size_t k = 0; k < row_str.length()/3; k++)
     {
-        std::vector<char> storeRes;
+        std::string resLine; // init with length
 
-        for(size_t j = 0; j < cLine.size(); j++)
+        for(size_t j = 0; j < nextLine.length()/4; j++) // process 4 items at once
         {
+            std::string config = nextLine.substr(j*4, 4);
+
             short a = (((short)cLine[j]) << 8);
             short b = (j < cLine.size()-1 ) ? ((short)cLine[j+1]) & 0x00FF : 0x0000; // padding the last element of the line
 
             // combine into short
             short comb = a | b;
 
-            /*
+
             std::bitset<16> ck(comb);
             std::bitset<16> ca(a);
             std::bitset<16> cb(b);
-            std::cout << "Traverse: " << ck << ", a=" << ca << ", b=" << cb << std::endl;*/
+            std::cout << "Traverse: " << ck << ", a=" << ca << ", b=" << cb << std::endl;
 
 
             std::string res(4, '-');
@@ -157,8 +173,8 @@ char triangle(std::string row_str)
                 char evalCode = lt[(unsigned char)theCode];
                 res[step] = evalCode;
 
-                /*std::bitset<8> tc(theCode);
-                std::cout << "Step: (" << j << "," << step << "): " << tc << "=" << decompress1in4(theCode) << ", eval=" << evalCode << std::endl;*/
+                std::bitset<8> tc(theCode);
+                std::cout << "Step: (" << j << "," << step << "): " << tc << "=" << decompress1in4(theCode) << ", eval=" << evalCode << std::endl;
 
             }
 
@@ -166,12 +182,14 @@ char triangle(std::string row_str)
             if(resCompress != 0x00) // do not store padding blocks
             {
                 storeRes.push_back(resCompress);
-                /*std::bitset<8> stepResPrint(resCompress);
-                std::cout << "Steps Res: (" << j << "): " << stepResPrint << ", size res vect: " << storeRes.size() << std::endl;*/
+                std::bitset<8> stepResPrint(resCompress);
+                std::cout << "Steps Res: (" << j << "): " << stepResPrint << ", size res vect: " << storeRes.size() << std::endl;
             }
         }
 
         cLine = storeRes;
+
+
     }
 
     // naive approach for the 1 - 3 remaining lines
@@ -193,7 +211,7 @@ int main (int argc, char *argv[])
 
 
     // long test
-    std::string longStr(30000, 'G'); // Besttime 3s,
+    std::string longStr(30000, 'G'); // Besttime 3s, 2.4s
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     char res = triangle(longStr);
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
