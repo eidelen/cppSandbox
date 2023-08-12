@@ -40,7 +40,7 @@ unsigned char compress4in1(const char* data)
         compressed = compressed | (code << (6 - i*2));
 
         //std::bitset<8> y(compressed);
-        //std::cout << y << std::endl;
+        //std::cout << "compress4in1: char = " << a << ", " << code << ", " <<  y << std::endl;
     }
 
     return compressed;
@@ -48,9 +48,13 @@ unsigned char compress4in1(const char* data)
 
 std::vector<char> compressLine(std::string line)
 {
+    //std::cout << "Compress: in = " << line << std::endl;
+
     // line length multiple of 4 -> padding
     size_t paddingLength = line.length() % 4 == 0 ? 0 : 4 - (line.length() % 4);
     line.append(paddingLength, '-');
+
+    //std::cout << "Compress padding = " << line << std::endl;
 
     std::vector<char> compLine(line.length() / 4); // compress 4 elements into 1 char
     char* lineChr = &line[0];
@@ -126,14 +130,17 @@ char triangle(std::string row_str)
 
         for(size_t j = 0; j < cLine.size(); j++)
         {
-            char a = cLine[j];
-            char b = (j < cLine.size() ) ? cLine[j+1] : 0x00; // padding the last element of the line
+            short a = (((short)cLine[j]) << 8);
+            short b = (j < cLine.size() ) ? ((short)cLine[j+1]) & 0x00FF : 0x0000; // padding the last element of the line
 
             // combine into short
-            short comb = a << 8 | b;
+            short comb = a | b;
+
 
             std::bitset<16> ck(comb);
-            std::cout << "Traverse: " << ck << std::endl;
+            std::bitset<16> ca(a);
+            std::bitset<16> cb(b);
+            std::cout << "Traverse: " << ck << ", a=" << ca << ", b=" << cb << std::endl;
 
 
             std::string res(4, '-');
@@ -143,8 +150,8 @@ char triangle(std::string row_str)
                 char evalCode = lt[(unsigned char)theCode];
                 res[step] = evalCode;
 
-                std::bitset<8> tc(theCode);
-                std::cout << "Step: (" << j << "," << step << "): " << tc << "=" << decompress1in4(theCode) << ", eval=" << evalCode << std::endl;
+                //std::bitset<8> tc(theCode);
+                //std::cout << "Step: (" << j << "," << step << "): " << tc << "=" << decompress1in4(theCode) << ", eval=" << evalCode << std::endl;
 
             }
 
@@ -169,7 +176,7 @@ char triangle(std::string row_str)
 
 int main (int argc, char *argv[])
 {
-    std::string test("GBGBG"); // failing -> wrong encoded?
+    std::string test("GBGBB"); // failing -> wrong encoded?
 
     char shouldRes = triangleNaive(test);
     std::cout << test << " evaluates to " << shouldRes << std::endl;
