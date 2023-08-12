@@ -118,7 +118,9 @@ std::unordered_map<std::string, char> createLookup()
                     config[3] = n;
 
                     char solution = triangleNaive(config);
-                    std::cout << "Table: " << solution << ":" << config << std::endl;
+                    //std::cout << "Table: " << solution << ":" << config << std::endl;
+
+                    table[config] = solution;
 
                 }
             }
@@ -135,6 +137,8 @@ char triangle(std::string row_str)
 
     std::unordered_map<std::string, char> lt = createLookup();
 
+    std::cout << "LU: BGRR " << lt["BGRR"] << std::endl;
+
     // line padding
     size_t paddingLength = row_str.length() % 4 == 0 ? 0 : 4 - (row_str.length() % 4);
     row_str.append(paddingLength, '-');
@@ -147,53 +151,24 @@ char triangle(std::string row_str)
     // process three lines at once
     for(size_t k = 0; k < row_str.length()/3; k++)
     {
-        std::string resLine; // init with length
+        std::string resLine(nextLine.length()-3, '-'); // init with length
 
-        for(size_t j = 0; j < nextLine.length()/4; j++) // process 4 items at once
+        //std::cout << k << ": NextLine: " << nextLine << std::endl;
+
+        for(size_t j = 0; j < nextLine.length()-3; j++) // process 4 items at once
         {
-            std::string config = nextLine.substr(j*4, 4);
+            std::string config = nextLine.substr(j, 4);
+            char res = lt[config];
+            resLine[j] = res;
 
-            short a = (((short)cLine[j]) << 8);
-            short b = (j < cLine.size()-1 ) ? ((short)cLine[j+1]) & 0x00FF : 0x0000; // padding the last element of the line
-
-            // combine into short
-            short comb = a | b;
-
-
-            std::bitset<16> ck(comb);
-            std::bitset<16> ca(a);
-            std::bitset<16> cb(b);
-            std::cout << "Traverse: " << ck << ", a=" << ca << ", b=" << cb << std::endl;
-
-
-            std::string res(4, '-');
-            for(size_t step = 0; step < 4; step++)
-            {
-                char theCode = comb >> (8 - step*2);
-                char evalCode = lt[(unsigned char)theCode];
-                res[step] = evalCode;
-
-                std::bitset<8> tc(theCode);
-                std::cout << "Step: (" << j << "," << step << "): " << tc << "=" << decompress1in4(theCode) << ", eval=" << evalCode << std::endl;
-
-            }
-
-            char resCompress = compress4in1(&res[0]);
-            if(resCompress != 0x00) // do not store padding blocks
-            {
-                storeRes.push_back(resCompress);
-                std::bitset<8> stepResPrint(resCompress);
-                std::cout << "Steps Res: (" << j << "): " << stepResPrint << ", size res vect: " << storeRes.size() << std::endl;
-            }
+            //std::cout << j << ": Config = " << config << ", res = " << res << std::endl;
         }
 
-        cLine = storeRes;
-
-
+        nextLine = resLine;
     }
 
     // naive approach for the 1 - 3 remaining lines
-    std::string finalLine = decompress1in4(cLine[0]);
+    std::string finalLine = nextLine;
 
     std::cout << "Final Line: " << finalLine.length() << std::endl;
     finalLine.erase(std::remove(finalLine.begin(), finalLine.end(), '-'), finalLine.end()); // remove any padding character
