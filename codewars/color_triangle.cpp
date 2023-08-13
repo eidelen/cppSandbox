@@ -1,78 +1,16 @@
 #include <string>
 #include <iostream>
-#include <unordered_map>
-#include <bitset>
-#include <vector>
 #include <algorithm>
+#include <cmath>
 
 #include <chrono>
 
 // product is order invariant
 constexpr char GB = 'G'*'B';
 constexpr char GR = 'G'*'R';
-constexpr char RB = 'R'*'B';
-
-constexpr char P = 0b00; // padding
-constexpr char R = 0b01; // red
-constexpr char G = 0b10; // green
-constexpr char B = 0b11; // blue
-
-std::string decompress1in4(char data)
-{
-    std::string decompressed(4, ' ');
-    for(int i = 0; i < 4; i++)
-    {
-        char val = (data >> (6 - i*2)) & 0b11;
-        char col = val == R ? 'R' : ( val == G ? 'G' : ( val == B ? 'B' : '-') );
-        decompressed[i] = col;
-    }
-
-    return decompressed;
-}
-
-char compress4in1(const char* data)
-{
-    char compressed = 0x00;
-    for(int i = 0; i < 4; i++)
-    {
-        char a = data[i];
-        char code = a=='R' ? R : ( a=='G' ? G : ( a=='B' ? B : P));
-        compressed = compressed | (code << (6 - i*2));
-
-        //std::bitset<8> y(compressed);
-        //std::cout << "compress4in1: char = " << a << ", " << code << ", " <<  y << std::endl;
-    }
-
-    return compressed;
-}
-
-std::vector<char> compressLine(std::string line)
-{
-    //std::cout << "Compress: in = " << line << std::endl;
-
-    // line length multiple of 4 -> padding
-    size_t paddingLength = line.length() % 4 == 0 ? 0 : 4 - (line.length() % 4);
-    line.append(paddingLength, '-');
-
-    //std::cout << "Compress padding = " << line << std::endl;
-
-    std::vector<char> compLine(line.length() / 4); // compress 4 elements into 1 char
-    char* lineChr = &line[0];
-    for(size_t i = 0; i < compLine.size(); i++)
-    {
-        compLine[i] = compress4in1(lineChr);
-        lineChr = lineChr + 4;
-    }
-
-    return compLine;
-}
-
 
 char getMissing(char a, char b)
 {
-    if(a == '-' || b == '-') // do not propagate padding
-        return '-';
-
     if(a == b)
         return a;
 
@@ -90,153 +28,74 @@ char triangleNaive(std::string row_str)
     if(row_str.length() == 1)
         return row_str[0];
 
-    std::cout << row_str << std::endl;
-
     for(size_t k = row_str.length(); k > 0; k--)
-    {
         for(size_t i = 0; i < k-1; i++)
-        {
             row_str[i] = getMissing(row_str[i], row_str[i+1]);
-        }
 
-        std::cout << row_str.substr(0, k-1) << std::endl;
-    }
     return row_str[0];
 }
 
-std::unordered_map<std::string, char> createLookup()
+// https://www.youtube.com/watch?v=9JN5f7_3YmQ
+size_t findMaxJumpDistance(size_t n)
 {
-    std::unordered_map<std::string, char> table;
-    std::string config(10, '-');
-    for(char i: {'R','B', 'G', '-'})
+    int i = 1;
+    int jmpDist = 0;
+    while( std::pow(3, i) + 1 <= n )
     {
-        config[0] = i;
-        for(char j: {'R','B', 'G', '-'})
-        {
-            config[1] = j;
-            for(char m: {'R','B', 'G', '-'})
-            {
-                config[2] = m;
-                for(char n: {'R','B', 'G', '-'})
-                {
-                    config[3] = n;
-                    for(char o: {'R','B', 'G', '-'})
-                    {
-                        config[4] = o;
-                        for(char p: {'R','B', 'G', '-'})
-                        {
-                            config[5] = p;
-                            for(char q: {'R','B', 'G', '-'})
-                            {
-                                config[6] = q;
-                                for(char r: {'R','B', 'G', '-'})
-                                {
-                                    config[7] = r;
-                                    for(char s: {'R','B', 'G', '-'})
-                                    {
-                                        config[8] = s;
-                                        for(char t: {'R','B', 'G', '-'})
-                                        {
-                                            config[9] = t;
-                                            char solution = triangleNaive(config);
-                                            //std::cout << "Table: " << solution << ":" << config << std::endl;
-
-                                            table[config] = solution;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        jmpDist = std::pow(3, i) + 1;
+        i++;
     }
 
-    return table;
+    return jmpDist;
 }
 
 char triangle(std::string row_str)
 {
+    size_t rowLength = row_str.length();
+    size_t jumpRows = findMaxJumpDistance(rowLength);
 
-    std::chrono::steady_clock::time_point prepare = std::chrono::steady_clock::now();
+    if( jumpRows == 0 )
+        return triangleNaive(row_str); // the last 1 - 3 lines are naively computed
 
-    std::unordered_map<std::string, char> lt = createLookup();
+    std::string res;
+    for(size_t i = 0; i < (rowLength-jumpRows+1); i++)
+        res += getMissing(row_str[i], row_str[i+(jumpRows-1)]);
 
-
-    // line padding
-    size_t paddingLength = row_str.length() % 10 == 0 ? 0 : 10 - (row_str.length() % 10);
-    row_str.append(paddingLength, '-');
-
-    std::string nextLine = row_str;
-
-    std::chrono::steady_clock::time_point endPreapare = std::chrono::steady_clock::now();
-    std::cout << "Preparation duration ms: " << std::chrono::duration_cast<std::chrono::milliseconds>(endPreapare - prepare).count() << std::endl;
-
-    size_t nbrComputations = 0;
-
-    // process 7 lines at once
-    for(size_t k = 0; k < (row_str.length()/9)-1; k++)
-    {
-        std::string resLine(nextLine.length()-9, '-'); // init with length
-
-        //std::cout << k << ": NextLine: " << nextLine << std::endl;
-
-        for(size_t j = 0; j < nextLine.length()-9; j++) // process 7 items at once
-        {
-            std::string config = nextLine.substr(j, 10);
-            char res = lt[config];
-            resLine[j] = res;
-
-            //std::cout << j << ": Config = " << config << ", res = " << res << std::endl;
-
-            nbrComputations++;
-        }
-
-        nextLine = resLine;
-    }
-
-    // naive approach for the 1 - 3 remaining lines
-    std::string finalLine = nextLine;
-
-    std::cout << "Final Line: " << finalLine.length() <<", NbrComp: " << nbrComputations << std::endl;
-    finalLine.erase(std::remove(finalLine.begin(), finalLine.end(), '-'), finalLine.end()); // remove any padding character
-    return triangleNaive(finalLine);
+    return triangle(res);
 }
 
 
 int main (int argc, char *argv[])
 {
-    std::string test("BBGRBGRB");
+    std::string test("RBRGBRBGGRRRBGBBBGG");
+    char shouldRes = triangleNaive(test);
+    std::cout << test << " evaluates to " << shouldRes << std::endl;
+    std::cout << "Fast solution: " << triangle(test) << std::endl;
+
 
     /*
-     *  BB -> B
-     *  BB -> B
-     *  RR -> R
-     *   R -> B
      *
-     *
-     *
-     */
+     * test_cases({make_pair("B", 'B'),
+                    make_pair("GB", 'R'),
+                    make_pair("RRR", 'R'),
+                    make_pair("RGBG", 'B'),
+                    make_pair("RBRGBRB", 'G'),
+                    make_pair("RBRGBRBGGRRRBGBBBGG", 'G')});
 
-    char shouldRes = triangleNaive(test);
-    //std::cout << test << " evaluates to " << shouldRes << std::endl;
-    //std::cout << "Fast solution: " << triangle(test) << std::endl;
 
-/*
     // long test
-    std::string longStr(30000, 'G'); // Besttime 3s, 2.4s, 4Hash = 19s and 149985000, 8Hash = 8s 64270710
+    std::string longStr(100000, 'G'); // Besttime 3s, 2.4s, 4Hash = 19s and 149985000, 8Hash = 8s 64270710, new approach 1.3s (jump lines...)
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     char res = triangle(longStr);
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     if(res == 'G')
-        std::cout << "Fine" << std::endl;
+        std::cout << "Fine: " <<  std::endl;
     else
-        std::cout << "Wrong!!" << std::endl;
+        std::cout << "Wrong:" << res << std::endl;
 
     std::cout << "Duration ms: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << std::endl;
-
 */
+
 
     /*
     constexpr char P = 0b00; // padding
