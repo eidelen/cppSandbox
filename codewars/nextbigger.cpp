@@ -4,6 +4,7 @@
 #include <cmath>
 
 static size_t leaves = 0;
+static size_t reccnt = 0;
 
 long rabbitHole(const long nbr, const long sum, const long pos, std::vector<long> digits, long& bestSolution)
 {
@@ -12,6 +13,7 @@ long rabbitHole(const long nbr, const long sum, const long pos, std::vector<long
         leaves++;
         return sum;
     }
+
 
     // pruning recursion
     auto[minE, maxE] = std::minmax_element(digits.begin(), digits.end());
@@ -22,33 +24,31 @@ long rabbitHole(const long nbr, const long sum, const long pos, std::vector<long
     if( lowerBound > bestSolution && bestSolution != -1)
         return -1;
 
-    // todo: make a best guess (largest element) to stop recursion
 
-    std::cout << pos << ": " << sum << ", " << ", lb=" << lowerBound << ", ub=" << upperBound << std::endl;
+    //std::cout << pos << ": " << sum << ", " << ", lb=" << lowerBound << ", ub=" << upperBound << std::endl;
 
     long solution = -1;
     for(size_t i = 0; i < digits.size(); i++)
     {
         long thenbr = digits[i];
-        long nextSum = sum + (digits[i] * std::pow(10, pos));
+        long mulPos = std::pow(10l, pos);
+        long mulAdd = thenbr * mulPos;
+        long nextSum = sum + mulAdd;
         std::vector<long> nextDigits(digits);
         nextDigits.erase(nextDigits.begin() + i);
         long pSol = rabbitHole(nbr, nextSum, pos-1, nextDigits, bestSolution);
 
         if( (pSol > nbr) && (pSol < solution || solution < 0))
         {
-            std::string nst = std::to_string(solution);
-            std::cout << "yeahh: " << nst << std::endl;
-            if (nst.find("8")!=std::string::npos)
-                std::cout << "problem" << std::endl;
+            reccnt++;
 
             solution = pSol;
-            std::cout << pos << ": " <<"new solution: " << solution << std::endl;
+            //std::cout << pos << ": " <<"new solution: " << solution << ", reccnt: " << reccnt << std::endl;
 
             if(solution < bestSolution || bestSolution < 0)
             {
                 bestSolution = solution;
-                std::cout << pos << ": " << "Best solution: " << bestSolution << std::endl;
+                //std::cout << pos << ": " << "Best solution: " << bestSolution << std::endl;
             }
         }
     }
@@ -61,8 +61,46 @@ long nextBigger(long n)
     std::string nStr = std::to_string(n);
     std::vector<long> digits(nStr.length(), 0);
     std::transform(nStr.begin(), nStr.end(), digits.begin(), [](char c) -> long { return c - 48; });
-    long bestSolution = -1;
-    return rabbitHole(n, 0, digits.size()-1, digits, bestSolution);
+
+    // swap next smaller element coming from the back
+    int swapPos = -1;
+    for(int m = digits.size()-1; m >= 0 && swapPos < 0; m--)
+    {
+        long sw1 = digits[m];
+        for(int n = m; n >= 0 && swapPos < 0; n--)
+        {
+
+            long sw2 = digits[n];
+
+            std::cout << "compare: " << sw2 << ", " << sw1 << std::endl;
+
+            if(sw2 < sw1)
+            {
+                std::cout << "swap: " << sw2 << ", " << sw1 << std::endl;
+                std::swap(digits[n], digits[m]);
+                swapPos = n;
+            }
+
+        }
+    }
+
+    for(auto l: digits)
+        std::cout << l << ", ";
+    std::cout << std::endl;
+
+    std::cout << "swappos:" << swapPos << std::endl;
+
+    std::sort(digits.begin()+swapPos+1, digits.end());
+
+    for(auto l: digits)
+        std::cout << l << ", ";
+    std::cout << std::endl;
+
+    long res = 0;
+    for(int p = 0; p < digits.size(); p++)
+        res += digits[p] * (long)std::pow(10l, digits.size() - p - 1);
+
+    return res;
 }
 
 
