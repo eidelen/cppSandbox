@@ -3,8 +3,10 @@
 #include <concepts>
 
 //** Coroutines **/
-struct ReturnObject {
-    struct promise_type {
+struct ReturnObject
+{
+    struct promise_type
+    {
         ReturnObject get_return_object() { return {}; }
         std::suspend_never initial_suspend() { return {}; }
         std::suspend_never final_suspend() noexcept { return {}; }
@@ -13,7 +15,7 @@ struct ReturnObject {
     };
 };
 
-struct Awaiter
+struct Awaiterr
 {
     std::coroutine_handle<> *hp_;
     constexpr bool await_ready() const noexcept { return false; }
@@ -23,11 +25,14 @@ struct Awaiter
 
 ReturnObject counter(std::coroutine_handle<> *continuation_out)
 {
-    Awaiter a{continuation_out};
+    Awaiterr a{continuation_out};
     for (unsigned i = 0;; ++i) // Does not end
     {
         co_await a;
         std::cout << "counter: " << i << std::endl;
+        co_await a;
+        std::cout << "Additional wait" << std::endl;
+
     }
 }
 
@@ -54,15 +59,13 @@ int main()
         // coroutines
         std::coroutine_handle<> h;
         counter(&h);
-        for (int i = 0; i < 3; ++i)
+        for (int i = 0; i < 6; ++i)
         {
-            std::cout << "In main1 function\n";
+            std::cout << "In main1 function: " << i << std::endl;
             h();
         }
         h.destroy();
     }
-
-
 
     return 0;
 }
